@@ -1,3 +1,9 @@
+"""
+The data model.
+These affect the schema of the database.
+
+"""
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import os
@@ -14,9 +20,7 @@ class Doctor(db.Model):
     doctorDepartment = db.Column(db.String(100), nullable=False)
     passwordHash = db.Column(db.Text, nullable=False)
     senior = db.Column(db.Boolean, nullable=False)
-
     # chatHistory = db.relationship("ChatHistory", backref="doctor", lazy=True)
-
 
 class Supervise(db.Model):
     _tablename_ = "supervise"
@@ -26,7 +30,6 @@ class Supervise(db.Model):
     )
     seniorID = db.Column(db.Integer, db.ForeignKey(Doctor.doctorID), nullable=False)
     juniorID = db.Column(db.Integer, db.ForeignKey(Doctor.doctorID), nullable=False)
-
     seniorDoc= db.relationship("Doctor",foreign_keys = [seniorID], backref = "supervise")
     juniorDoc = db.relationship("Doctor", foreign_keys = [juniorID], backref ="supervisedBy")
 
@@ -38,10 +41,8 @@ class Patient(db.Model):
     patientTag = db.Column(db.String(200), nullable=True)
     doctorID = db.Column(db.Integer, db.ForeignKey(Doctor.doctorID), nullable=False)
     seniorID = db.Column(db.Integer, db.ForeignKey(Doctor.doctorID))
-
     doc = db.relationship("Doctor", foreign_keys=[doctorID], backref = "patient")
     senior = db.relationship("Doctor", foreign_keys=[seniorID], backref = "patientSupervised")
-
     # patientThreshold = db.relationship("PatientThreshold", backref="patient", lazy=True, uselist=False)
     # patientHistory = db.relationship("PatientHistory", backref="patient", lazy=True)
     # chatHistory = db.relationship("ChatHistory", backref="patient", lazy=True)
@@ -60,8 +61,6 @@ class PatientThreshold(db.Model):
     spo2OrangeLower = db.Column(db.Float, nullable=False)
     p = db.relationship("Patient", backref = "threshold")
 
-
-
 class PatientHistory(db.Model):
     _tablename_ = "patientHistory"
     __table_args__ = (
@@ -73,8 +72,6 @@ class PatientHistory(db.Model):
     category = db.Column(db.String(10), nullable=False)
     time = db.Column(db.DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-
-
 class ChatHistory(db.Model):
     _tablename_ = "chatHistory"
     msgID = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -84,7 +81,6 @@ class ChatHistory(db.Model):
     fromSide = db.Column(db.String(1), nullable=False)
     message = db.Column(db.Text, nullable=False)
     time = db.Column(db.DateTime(timezone=True), server_default=func.now(), nullable=False)
-
     doctor = db.relationship("Doctor", foreign_keys = [doctorID])
     senior = db.relationship("Doctor", foreign_keys = [seniorID])
 

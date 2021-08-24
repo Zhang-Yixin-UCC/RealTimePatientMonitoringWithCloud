@@ -1,15 +1,17 @@
+"""
+The routing logic of the server.
+"""
+
 import distutils
 import io
 import traceback
 from datetime import datetime, timedelta
 from distutils.util import strtobool
 from time import perf_counter
-
 import eventlet
 import matplotlib.pyplot
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
-
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
@@ -19,7 +21,6 @@ import os
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import and_
 from flask_socketio import SocketIO, join_room, emit
-
 from model import db, Doctor, Patient, PatientThreshold, PatientHistory, ChatHistory, Supervise
 from config import app
 import json
@@ -28,9 +29,11 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP, PKCS1_v1_5
 import base64
 
+# Uncomment this line to erase everything in the database.
 # db.drop_all()
 db.create_all()
-#
+
+# Uncomment these lines to add some initial data to the database.
 # doc1 = Doctor(doctorID="1", doctorName="Dummy 1", doctorDepartment="Dummy", passwordHash="cc9b402d63549cb7e095efaaf2ed7399e09fb74bf746c08dd5ec722e44acfa41", senior = False)
 # db.session.add(doc1)
 # db.session.commit()
@@ -46,14 +49,28 @@ db.create_all()
 
 
 socketio = SocketIO(app, async_mode="eventlet")
+# docSid: map the sid to doctor ID.
+# Used to search sid using doctor ID. Used for figuring out if the doctor is online.
 docSid = {}
+# docSid2: map the doctor ID to the sid.
+# Used to search doctor ID using sid. Used for figure out doctor ID from the WS request.
 docSid2 = {}
+# docSid: map the sid to patient ID.
+# Used to search sid using patient ID. Used for figuring out if the patient is online.
 patSid = {}
+# patSid2: map the patient ID to the sid.
+# Used to search patient ID using sid. Used for figure out patient ID from the WS request.
 patSid2 = {}
+# boardSid: contains all sid that belongs to the bulletin board.
+# Used for broadcast the real-time category to all bulletin board.
 boardSid = []
+# patPhoneDict: map the phone number to patient ID
 patPhoneDict = {}
+# docPhoneDict: map the phone number to patient ID
 docPhoneDict = {}
+# startTime: used for the experiment. stores the initial time
 startTime = perf_counter()
+# initiate the experiment logging files
 with open("dbSize.csv", "w")as f:
     f.write(str(startTime) + "," +str(os.path.getsize(os.path.abspath('HIS.db'))) + "\n")
 with open("dbCount.csv", "w") as f:
@@ -61,7 +78,7 @@ with open("dbCount.csv", "w") as f:
 with open("statisticTime.csv", "w") as f:
     f.write("")
 
-
+# Util function. Take in encrypted string, Return decrypted string.
 def decryptString(encryptedString):
     en = base64.b64decode(encryptedString)
     with open(os.path.join(app.config["baseDir"], "privateKey.bin")) as f:
@@ -72,20 +89,22 @@ def decryptString(encryptedString):
     ret = cipher.decrypt(en, sentinel)
     return ret
 
-
+# Util function. sample the size of the database file.
 def sampleDbSize():
     now = perf_counter()
     t = now - startTime
     with open("dbSize.csv", "a") as f:
         f.write(str(t) + "," + str(os.path.getsize(os.path.abspath('HIS.db'))) + "\n")
 
+# Util function. Count the entries in the patient_history table.
 def sampleDbCount():
     now = perf_counter()
     t = now-startTime
     with open("dbCount.csv","a") as f:
         f.write(str(t) + "," + str(PatientHistory.query.count()) + "\n")
 
-
+# Do before the first request. Only execute once.
+# Generate a pair of RSA-2048 keys and store in two files.
 @app.before_first_request
 def generate_keys():
     randomGenerator = Random.new().read
@@ -97,19 +116,24 @@ def generate_keys():
     with open(os.path.join(app.config["baseDir"], "publicKey.pem"), "wb") as f:
         f.write(rsa.public_key().exportKey())
 
-
+# Hello world!
 @app.route('/')
 def hello_world():
     return 'Hello World!'
 
-
+#REST API: return the public key
 @app.route("/getPBK")
 def getPBK():
     with open(os.path.join(app.config["baseDir"], "publicKey.pem")) as f:
         data = f.read()
     return data, 200
 
-
+# REST API: doctor login
+# Get login data. Search the database to see if the doctor exists
+# If exists, see if is senior doctor
+# If is senior doctor, return {"senior":""}
+# If not, return the ID of the senior doctor
+# Store the phone number in docPhoneDict.
 @app.route("/docLogin", methods=["POST"])
 def docLogin():
     if request.method == "POST":
@@ -150,7 +174,10 @@ def docLogin():
     else:
         return "", 405
 
-
+# REST API: require patient list
+# require a doctor ID
+# return a list of patients.
+# if is senior doctor, also return all patients whose doctor is supervised by the senior doctor.
 @app.route("/reqPatientList", methods=["POST"])
 def reqPatientList():
     if request.method == "POST":
@@ -198,7 +225,10 @@ def reqPatientList():
             print(str(e))
             return "", 400
 
-
+# REST API: patient login
+# Get login data. Search the database to see if the patient exists
+# If exists, return the patient information.
+# Store the phone number in patPhoneDict.
 @app.route("/patientLogin", methods=["POST"])
 def patientLogin():
     if request.method == "POST":
@@ -229,7 +259,10 @@ def patientLogin():
     else:
         return "", 405
 
-
+# REST API: register a new patient
+# get patient info and thresholds from the request.
+# Stores in the database.
+# return the patient ID.
 @app.route("/regPatient", methods=["POST"])
 def regPatient():
     if request.method == "POST":
@@ -279,9 +312,14 @@ def regPatient():
     else:
         return "", 405
 
-
+# REST API: get the statistic report of a specific patient
+# Traverse all history data in one day. Calculate the average, highest and lowest value
+# of each vital parameter. Calculate the proportions of categories
+# return the data.
 @app.route("/getPatientStatistic", methods=["POST"])
 def getPatientStatistic():
+    # startT1: for the experiment usage.
+    # Used for getting the start time of this API.
     startT1 = perf_counter()
     try:
         id = int(request.json["id"])
@@ -365,6 +403,9 @@ def getPatientStatistic():
                       "spLowestTime": str(spLowestTime)}
 
         paramJson = json.loads(json.dumps(params))
+        # endT1: for experiment use
+        # Used for logging the end time of the API
+        # Store the time in the logging file.
         endT1 = perf_counter()
         with open("statisticTime.csv", "a") as f:
             f.write(str(count) + "," + str(endT1 - startT1) + "\n")
@@ -374,11 +415,14 @@ def getPatientStatistic():
         print(e)
         return "", 500
 
+# REST API: getting the history graph of a specific patient.
+# Traverse the history data in one day.
+# Use the data to plot a graph.
+# Convert the graph to base64 code and put it in a html template.
+# return the html file.
 @app.route("/getPatientStatisticPic", methods=["POST"])
 def getPatientStatisticPic():
     try:
-        print(request.form)
-        print(request.form)
 
         id = request.form["id"]
         name = ""
@@ -398,19 +442,12 @@ def getPatientStatisticPic():
             dates.append(str(entry.time))
             heartrates.append(entry.heartrate)
             spo2s.append(entry.spo2)
-
-
-
         fig = plt.figure(figsize=(10,10))
-
-
-
         hrAxis = fig.add_subplot(2,1,1)
         spo2Axis = fig.add_subplot(2,1,2)
         for ax in fig.axes:
             matplotlib.pyplot.sca(ax)
             plt.xticks(rotation = 45)
-
         hrAxis.set_title("Heartrate chart in 1 day")
         hrAxis.set_xlabel("Time")
         hrAxis.set_ylabel("Heartrate")
@@ -421,7 +458,6 @@ def getPatientStatisticPic():
         spo2Axis.set_ylabel("SpO2")
         spo2Axis.plot(dates, spo2s)
         spo2Axis.grid()
-
         hrAxis.xaxis.set_major_locator(ticker.MultipleLocator(30))
         spo2Axis.xaxis.set_major_locator(ticker.MultipleLocator(30))
         fig.tight_layout()
@@ -436,6 +472,10 @@ def getPatientStatisticPic():
         print(str(e))
         return "", 500
 
+# WS API: default connect event
+# Require a type argument in the connect request
+# Store the sid and ID to corresponding mapping
+# Emit the online event to corresponding client.
 @socketio.on("connect")
 def connect():
     print(f"connect {request.sid}")
@@ -475,7 +515,6 @@ def connect():
         else:
             raise ConnectionRefusedError
 
-
     elif type == "board":
         boardSid.append(request.sid)
         patient = Patient.query.all()
@@ -490,7 +529,10 @@ def connect():
         print(resJson)
         emit("updatePatient", resJson, room=request.sid)
 
-
+# WS API: default disconnect event.
+# DO not require the client identify itself
+# Use the mapping to find out which client disconnects
+# Emit disconnect event to corresponding client.
 @socketio.on("disconnect")
 def disconnect():
     print(f"disconnect {request.sid}")
@@ -508,7 +550,6 @@ def disconnect():
             if str(p.patientID) in patSid.keys():
                 destSid = patSid[str(p.patientID)]
                 emit("docOffline", room=destSid)
-
 
     elif request.sid in patSid2.keys():
         patID = patSid2[request.sid]
@@ -535,7 +576,10 @@ def disconnect():
                 print(destSid)
                 emit("patientOffline", patientJson, room=destSid)
 
-
+# WS API: Dealing with vital data update
+# Categorize the patient using vital data
+# Store the data
+# Emit the data to the doctor clients and bulletin board.
 @socketio.on("patientMonitorUpdate")
 def patientMonitorUpdate(data):
     try:
@@ -604,7 +648,9 @@ def patientMonitorUpdate(data):
     except Exception as e:
         print(str(e))
 
-
+# WS API: Relay the chat message
+# Store the message in the database
+# Emit the message to corresponding clients.
 @socketio.on("uploadChatMsg")
 def uploadChatMsg(data):
     try:
@@ -652,7 +698,7 @@ def uploadChatMsg(data):
     except Exception as e:
         print(str(e))
 
-
+# background task for the experiment
 def backgroundTask():
     while True:
         socketio.sleep(1)
