@@ -6,6 +6,8 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
 
+//Singleton for the request queue used in Volley
+//This make sure that there is only one request queue in the application.
 public class RequestQueueSingleton {
     private static RequestQueueSingleton instance;
     private static Context ctx;
@@ -32,7 +34,4 @@ public class RequestQueueSingleton {
     public <T> void addToRequestQueue(Request<T> request){
         getRequestQueue().add(request);
     }
-
-
-
 }

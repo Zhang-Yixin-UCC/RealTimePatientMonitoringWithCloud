@@ -24,9 +24,9 @@ import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 
+//The background service that handles the WS connection.
 public class SocketBackgroundService extends Service {
     private MBinder binder = new MBinder();
-
     public class MBinder extends Binder {
         public SocketBackgroundService getServiceBinder() {
             return SocketBackgroundService.this;
@@ -54,7 +54,6 @@ public class SocketBackgroundService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-
         Log.d("serviceThing", "onCreate");
         appConfig = new AppConfig();
         Log.d("serviceThing", doctorID);
@@ -67,16 +66,19 @@ public class SocketBackgroundService extends Service {
         Log.d("serviceThing", "onDestory");
     }
 
+//    The debug function
     public void hello() {
         Log.d("serviceThing", "hello");
     }
 
+//    Set the doctor ID.
     public void setDoctorID(String doctorID) {
         this.doctorID = doctorID;
     }
 
-
+//  Function that establish the WS connection to the server
     public void connectSocket() {
+//        Identify the client when connecting
         IO.Options opts = new IO.Options();
         opts.query = "type=" + "doc" + "&docID=" + doctorID;
         try {
@@ -85,10 +87,12 @@ public class SocketBackgroundService extends Service {
             Log.d("serviceThing", e.toString());
         }
 
+//        Set the listener for receiving vital data
         mSocket.on("patientMonitorUpdate", args -> {
             try {
                 Log.d("service", Arrays.toString(args));
-
+//                Put the vital sign data to an intent
+//                Broadcast the intent throughout the application.
                 JSONObject params = (JSONObject) args[0];
                 Patient patient = new Patient(params.getString("name"), params.getString("id"), params.getString("tag"), params.getString("color"), params.getString("heartrate"), params.getString("spo2"), params.getString("doctorID"), params.getString("phone"), Boolean.parseBoolean(params.getString("allowReply")));
                 Intent intent = new Intent("updatePatient");
@@ -100,10 +104,12 @@ public class SocketBackgroundService extends Service {
                 LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
             }
         });
+
+//        Set the listener for receiving chat message
         mSocket.on("chatUpdate", args -> {
             try {
                 JSONObject messageJSON = (JSONObject) args[0];
-
+//                Create a Message object and store the message in the shared preference.
                 Message message =
                         new Message(
                                 messageJSON.getString("msg"),
@@ -125,6 +131,7 @@ public class SocketBackgroundService extends Service {
                     msgJsonArray.put(msgJson);
                     sharedPreferences.edit().putString("msg", msgJsonArray.toString()).apply();
                 }
+//                Put the Message object in an intent and broadcast throughout the application.
                 Intent intent = new Intent("chatUpdate");
                 intent.putExtra("msg", message);
                 LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
@@ -132,6 +139,7 @@ public class SocketBackgroundService extends Service {
                 Log.d("exception", e.toString());
             }
         });
+//        Connect to the server using the Socket
         if(mSocket.connected()){
             mSocket.disconnect();
             mSocket.connect();
@@ -140,14 +148,19 @@ public class SocketBackgroundService extends Service {
         }
     }
 
+//    Function that disconnect the WS connection.
     public void disconnectSocket(){
         if (mSocket.connected()){
         mSocket.disconnect();}
     }
 
+//    Function that send the message to the server
     public void sendMessage(Patient patient, Message message) {
         if (mSocket.connected()) {
+//            Register the listener for confirming event
             mSocket.on("confirm", args -> {
+//                Fetch the message from the event.
+//                Store the message in the shared preference.
                 JSONObject msgJsonArg = (JSONObject) args[0];
                 Log.d("msg", msgJsonArg.toString());
                 try {
@@ -173,15 +186,17 @@ public class SocketBackgroundService extends Service {
 
                     }
                     Log.d("msg", message1.toString());
-
+//                   Put the message in the intent and broadcast it.
                     Intent intent = new Intent("confirmMsg");
                     intent.putExtra("msg", message1);
                     LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
                 } catch (Exception e) {
                     Log.d("exception", e.toString());
                 }
+//                Unregister the confirm listener.
                 mSocket.off("confirm");
             });
+//            Send the message to the server.
             mSocket.emit("uploadChatMsg", message.toJSONObject());
 
         }

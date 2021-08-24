@@ -46,6 +46,7 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
+//The controller for the login activity
 public class Login extends AppCompatActivity {
     private TextView doctoridTV, passwordTV, phoneNumberTV;
     private Button loginBT;
@@ -54,32 +55,38 @@ public class Login extends AppCompatActivity {
     private String pbk = "";
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+//        Connect the variables to the views
         doctoridTV = findViewById(R.id.doctorIDTV);
         passwordTV = findViewById(R.id.passwordTV);
         loginBT = findViewById(R.id.loginBT);
         phoneNumberTV = findViewById(R.id.phoneNumberTV);
+//        Get the request queue singleton
         requestQueue = RequestQueueSingleton.getInstance(this.getApplicationContext()).getRequestQueue();
         appConfig = new AppConfig();
         String getPbkUrl = appConfig.getServerUrl() + "getPBK";
+//        Request the public key.
         getPBK(getPbkUrl);
     }
 
+//    Util function for requesting the public key.
     public void getPBK(String url) {
+//        Build a string request.
         StringRequest stringRequest = new StringRequest(url,
+//                Set the response listener
                 response -> {
+//                  Get the response and trim the string.
                     pbk = response.substring(0);
                     pbk = pbk.replace("-----BEGIN PUBLIC KEY-----", "")
                             .replace("-----END PUBLIC KEY-----", "")
                             .replace("\n", "")
                             .trim();
                 },
+//                Set the error listener.
                 error -> {
-
                     if (error.networkResponse == null) {
                         runOnUiThread(() -> {
                             DialogFrag1option dialogFrag1option = DialogFrag1option.newInstance("Error", "Server not reachable.", "OK");
@@ -91,14 +98,16 @@ public class Login extends AppCompatActivity {
                     }
                 }
         );
+//        Send the request by adding it to the request queue.
         RequestQueueSingleton.getInstance(this).addToRequestQueue(stringRequest);
     }
 
-
+//Util function for logging in.
     public void loginDoc(String url, String params) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, UnsupportedEncodingException {
         Log.d("data", params);
         Log.d("pbk", pbk);
         if (pbk != null) {
+//            Encrypting process
             byte[] pbkBytes = Base64.decode(pbk, Base64.DEFAULT);
             X509EncodedKeySpec keySpec = new X509EncodedKeySpec(pbkBytes);
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
@@ -108,14 +117,18 @@ public class Login extends AppCompatActivity {
             byte[] encrypted = cipher.doFinal(params.getBytes());
             String encoded = Base64.encodeToString(encrypted, Base64.DEFAULT);
             Log.d("encrypted", encoded);
+//            Put the encrypted String to a Json object and set it as argument
             Map<String, String> param = new HashMap<>();
             param.put("value", encoded);
             JSONObject jsonParam = new JSONObject(param);
+//            Make a json object request
             JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST,
                     url,
                     jsonParam,
+//                    Set the listener
                     response -> {
                         try {
+//                            Fetch the doctor information from the response.
                             String seniorID = response.getString("senior");
                             String doctorID = doctoridTV.getText().toString();
                             Intent intent = new Intent(Login.this, PatientList.class);
@@ -129,12 +142,15 @@ public class Login extends AppCompatActivity {
                                 bundle.putString("senior",doctorID);
                             }
                             intent.putExtras(bundle);
+//                            Redirect to patient list activity and pass the doctor information.
                             startActivity(intent);
                         } catch (JSONException e) {
                             Log.d("exception", e.toString());
                         }
 
-                    }, error -> {
+                    },
+//                    Set the error listener.
+                    error -> {
                 if (error.networkResponse == null) {
                     runOnUiThread(() -> {
                         DialogFrag1option dialogFrag1option = DialogFrag1option.newInstance("Error", "Server not reachable.", "OK");
@@ -157,24 +173,25 @@ public class Login extends AppCompatActivity {
             }
             );
             jsonObjectRequest.setShouldCache(false);
+//            Send the login request
             RequestQueueSingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
         }
         else{
             DialogFrag1option dialogFrag1option = DialogFrag1option.newInstance("Error", "Connection Failed.<Get PBK failed>\nRestart app. If this problem reoccurs contact IT staff", "OK");
             dialogFrag1option.show(getSupportFragmentManager(), "connectionFailedDialog");
         }
-
-
     }
 
-
+//    OnClick listener for login button
     public void loginEventHandler(View v) {
         String doctorid = doctoridTV.getText().toString();
         String password = passwordTV.getText().toString();
         String phone = phoneNumberTV.getText().toString();
+
         if (doctorid.equals("") || password.equals("")||phone.equals("")) {
             Toast.makeText(this, "Must fill in ID and password and phone.", Toast.LENGTH_SHORT).show();
         } else {
+//            Hash the password
             String passwordHash = Hashing.sha256().hashString(password, StandardCharsets.UTF_16).toString();
             Log.d("passwordhash", password);
             Log.d("passwordhash", passwordHash);
@@ -184,10 +201,12 @@ public class Login extends AppCompatActivity {
             params.put("phone",phone);
             String loginDetails = String.valueOf(new JSONObject(params));
             String loginUrl = appConfig.getServerUrl() + "docLogin";
-
+//          Login
             try {
                 loginDoc(loginUrl, loginDetails);
             } catch (Exception e) {
+                DialogFrag1option dialogFrag1option = DialogFrag1option.newInstance("Error", "Unknown error.<Login>\nPlease contact IT staff.", "OK");
+                dialogFrag1option.show(getSupportFragmentManager(), "UnknownErrorLogin");
                 Log.d("ex", e.toString());
             }
         }

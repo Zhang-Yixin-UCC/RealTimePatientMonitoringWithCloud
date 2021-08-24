@@ -3,6 +3,7 @@ package com.example.doctorclient;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+//The Patient class
 public class Patient implements Parcelable {
     public String name;
     public String id;
@@ -14,8 +15,10 @@ public class Patient implements Parcelable {
     public String phone;
     public Boolean allowReply;
 
+//    Suppress the default constructor.
     private Patient(){}
 
+//    Constructor for default patient
     public Patient(String name, String id, String tag, String docID, String phone, Boolean allowReply){
         this.name = name;
         this.id = id;
@@ -27,6 +30,8 @@ public class Patient implements Parcelable {
         this.phone = phone;
         this.allowReply = allowReply;
     };
+
+//    Constructor for patient who has full information.
     public  Patient(String name, String id, String tag, String color, String heartrate, String spo2,String docID, String phone, Boolean allowReply){
         this.name = name;
         this.id = id;
@@ -39,9 +44,7 @@ public class Patient implements Parcelable {
         this.allowReply = allowReply;
     }
 
-
-
-
+//    Util functions for implement Parcelable.
     public Patient(Parcel p){
         this.name = p.readString();
         this.id = p.readString();

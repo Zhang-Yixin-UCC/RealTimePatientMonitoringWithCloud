@@ -9,6 +9,10 @@ import android.util.Log;
 
 import androidx.fragment.app.DialogFragment;
 
+// Customizable dialog fragment
+//Mode = null -> No event listener is assigned to the button
+//Mode = 1 -> Pressing the button will finish current activity.
+//Mode = 2 -> Pressing the button will redirect to the Login activity.
 public class DialogFrag1option extends DialogFragment {
 
     public DialogFrag1option(){}
@@ -33,9 +37,6 @@ public class DialogFrag1option extends DialogFragment {
         frag.setArguments(bundle);
         return frag;
     }
-
-
-
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState){
         Log.d("bundlesize", String.valueOf(getArguments().size()));
@@ -43,39 +44,22 @@ public class DialogFrag1option extends DialogFragment {
         builder.setTitle(getArguments().getString("title"));
         builder.setMessage(getArguments().getString("msg"));
         if (getArguments().size() == 3){
-            builder.setPositiveButton(getArguments().getString("option"), new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
+            builder.setPositiveButton(getArguments().getString("option"), (dialog, which) -> {
 
-                }
             });
         }else{
             int mode = getArguments().getInt("mode");
             if (mode == 1){
-                builder.setPositiveButton(getArguments().getString("option"), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        getActivity().finish();
-
-                 }
-                });
+                builder.setPositiveButton(getArguments().getString("option"), (dialog, which) -> getActivity().finish());
             }else if (mode == 2){
-                builder.setPositiveButton(getArguments().getString("option"), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Intent intent = new Intent(getContext(),Login.class);
-                        startActivity(intent);
-                    }
+                builder.setPositiveButton(getArguments().getString("option"), (dialog, which) -> {
+                    Intent intent = new Intent(getContext(),Login.class);
+                    startActivity(intent);
                 });
 
             }
 
         }
-
-
-
-
-
         return builder.create();
     }
 

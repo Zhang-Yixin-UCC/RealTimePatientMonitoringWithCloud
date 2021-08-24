@@ -13,6 +13,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 
+//The adapter for the chat recycler view.
+//Takes in an array list of Message objects and if the user is senior doctor.
 public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<ChatRecyclerViewAdapter.ViewHolder> {
     private ArrayList<Message> data;
     private Context context;
@@ -24,12 +26,14 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<ChatRecyclerVi
         this.isSenior = isSenior;
     }
 
+//    Inflate the layout.
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.chat_item, parent, false);
         return new ViewHolder(view);
     }
 
+//    Put the messages into the view holder
     @Override
     public void onBindViewHolder(@NonNull ChatRecyclerViewAdapter.ViewHolder holder, int position) {
         if (data != null) {
@@ -73,11 +77,11 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<ChatRecyclerVi
                     holder.getLeftMsgTV().setTextColor(Color.BLUE);
 
                 }
-
             }
         }
     }
 
+//    Get the count of messages
     @Override
     public int getItemCount() {
         if (data != null) {
@@ -86,6 +90,7 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<ChatRecyclerVi
         return 0;
     }
 
+//    Create the view holder
     public static class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView leftMsgTV, rightMsgTV, leftTimeTV, rightTimeTV;
 
@@ -97,6 +102,7 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<ChatRecyclerVi
             rightTimeTV = itemView.findViewById(R.id.rightTimeTV);
         }
 
+//        Util functions for getting textViews
         public TextView getLeftMsgTV() {
             return leftMsgTV;
         }
@@ -114,11 +120,13 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<ChatRecyclerVi
         }
     }
 
+//    Util function for updating the whole chat recycler view.
     public void updateAdapter(ArrayList<Message> data) {
         this.data = data;
         notifyDataSetChanged();
     }
 
+//    Util function for inserting the message to the bottom.
     public void insertAtBottom(ArrayList<Message> data) {
         this.data = data;
         notifyItemInserted(data.size() - 1);

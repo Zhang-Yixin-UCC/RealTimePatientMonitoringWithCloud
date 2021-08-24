@@ -20,6 +20,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
+//The controller for statistic activity.
 public class Statistics extends AppCompatActivity {
     private String patientID;
     private RequestQueue requestQueue;
@@ -30,11 +31,10 @@ public class Statistics extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_statistics);
-
+//        Get the information from the intent and
+//        connect the variables to the views
         patientID = getIntent().getStringExtra("patientID");
-
         Log.d("patientID", patientID);
-
         normalTV = findViewById(R.id.normalTV);
         orangeTV = findViewById(R.id.orangeTV);
         redTV = findViewById(R.id.redTV);
@@ -55,14 +55,16 @@ public class Statistics extends AppCompatActivity {
         appConfig = new AppConfig();
         String uri = appConfig.getServerUrl() + "getPatientStatistic";
 
+
         Map<String, String> param = new HashMap<>();
         param.put("id", patientID);
         JSONObject paramJson = new JSONObject(param);
         Log.d("paramJson", paramJson.toString());
-
+//        Make a json object request to request the statistic report
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST,
                 uri,
                 paramJson,
+//                Put the report data in the text views.
                 response -> {
                     try{
                         normalTV.setText(response.getString("normal"));
@@ -80,9 +82,6 @@ public class Statistics extends AppCompatActivity {
                         spo2HighestTimeTV.setText(response.getString("spHighestTime"));
                         spo2LowestTV.setText(response.getString("spLowest"));
                         spo2LowestTimeTV.setText(response.getString("spLowestTime"));
-
-
-
                     }catch(Exception e){
                         Log.d("exception", e.toString());
                         runOnUiThread(() -> {
@@ -107,9 +106,11 @@ public class Statistics extends AppCompatActivity {
         );
 
         jsonObjectRequest.setShouldCache(false);
+//        Send the request
         RequestQueueSingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
     }
 
+//    OnClick handler for redirecting to the history chart activity.
     public void historyChartOnClick(View v){
         Intent intent = new Intent(this, HistoryChart.class);
         intent.putExtra("id", patientID);

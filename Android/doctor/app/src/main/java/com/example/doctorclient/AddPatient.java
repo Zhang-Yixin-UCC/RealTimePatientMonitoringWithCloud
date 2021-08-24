@@ -21,6 +21,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
+//The controller for add_patient activity
 public class AddPatient extends AppCompatActivity {
     private TextView patientNameTV, patientTagTV,
             heartrateNormalUpperTV, heartrateNormalLowerTV,
@@ -37,6 +38,7 @@ public class AddPatient extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_patient);
+//        Connect the variables to the views
         patientNameTV = findViewById(R.id.patientNameTV);
         patientTagTV = findViewById(R.id.patientTagTV);
 
@@ -51,6 +53,7 @@ public class AddPatient extends AppCompatActivity {
         spo2OrangeLowerTV = findViewById(R.id.spo2OrangeLowerTV);
 
         appConfig = new AppConfig();
+//        Get the doctor information from the intent.
         Intent intent = getIntent();
         Bundle bundle = intent.getExtras();
         doctorID = bundle.getString("doctorID");
@@ -68,6 +71,7 @@ public class AddPatient extends AppCompatActivity {
         }
     }
 
+//    OnClick event handler for setting thresholds to default value.
     public void setDefaultOnClick(View v) {
         heartrateNormalUpperTV.setText("110");
         heartrateNormalLowerTV.setText("75");
@@ -79,6 +83,8 @@ public class AddPatient extends AppCompatActivity {
         spo2OrangeUpperTV.setText("100");
         spo2OrangeLowerTV.setText("93");
     }
+
+//    Onclick listener for the "add" button
 
     public void addPatientOnClick(View v) {
         String patientName = patientNameTV.getText().toString();
@@ -101,6 +107,8 @@ public class AddPatient extends AppCompatActivity {
             DialogFrag1option dialogFrag1option = DialogFrag1option.newInstance("Error", "Some fields are empty.", "OK");
             dialogFrag1option.show(getSupportFragmentManager(), "addPatientFieldEmptyDialog");
         } else {
+
+//            Put the thresholds and patient information into a JSON object
             Map<String, String> params = new HashMap<>();
             params.put("doctorID", doctorID);
             params.put("patientName", patientName);
@@ -122,11 +130,14 @@ public class AddPatient extends AppCompatActivity {
             JSONObject paramsJson = new JSONObject(params);
             Log.d("patientParams", params.toString());
             String url = appConfig.getServerUrl() + "regPatient";
+//            Make a json object request and put the json in the request
             JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST,
                     url,
                     paramsJson,
+//                    Set the response listener
                     response -> {
                         try {
+//                            Get the patient ID from the response and show it in a dialog box.
                             String patientID = response.getString("patientID");
                             String msg = "The ID of this patient is: " + patientID + ".\nMake sure you tell the patient.";
                             DialogFrag1option dialogFrag1option = DialogFrag1option.newInstance("Patient ID", msg, "OK", 1);
@@ -139,6 +150,7 @@ public class AddPatient extends AppCompatActivity {
                         }
 
                     },
+//                    Set the error listener
                     error -> {
                         if (error.networkResponse == null) {
                             runOnUiThread(() -> {
@@ -157,6 +169,7 @@ public class AddPatient extends AppCompatActivity {
                     }
             );
             jsonObjectRequest.setShouldCache(false);
+//            Send the request
             RequestQueueSingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
 
         }

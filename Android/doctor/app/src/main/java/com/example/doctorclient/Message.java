@@ -9,6 +9,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
+//The Message class
 public class Message implements Parcelable {
     public String msg;
     public String time;
@@ -17,6 +18,7 @@ public class Message implements Parcelable {
     public String docID;
     public String seniorID;
 
+//    Suppress the default constructor
     private Message(){}
 
     public  Message(String msg, String time, String from, String patientID, String docID, String seniorID){
@@ -28,10 +30,7 @@ public class Message implements Parcelable {
         this.seniorID = seniorID;
     }
 
-
-
-
-
+//    Util function for converting the Message object to json object.
     public JSONObject toJSONObject(){
         Map<String, String> param = new HashMap<>();
         param.put("msg", this.msg);
@@ -40,17 +39,18 @@ public class Message implements Parcelable {
         param.put("patientID", this.patientID);
         param.put("doctorID", this.docID);
         param.put("seniorID", this.seniorID);
-
         JSONObject ret = new JSONObject(param);
         return  ret;
     }
 
+//    Util function for converting the Message object to String.
     @Override
     public String toString(){
         return "{\"msg\":"+this.msg + ", \"time\":" + this.time + ", \"from\":" + this.from + ", \"patientID\":" + this.patientID + ", \"doctorID\":" + this.docID + ", \"seniorID\":" + this.seniorID+"}";
 
     }
 
+//    Constructor
     public Message(@NonNull Parcel p){
         this.msg = p.readString();
         this.time = p.readString();
@@ -60,7 +60,7 @@ public class Message implements Parcelable {
         this.seniorID = p.readString();
     }
 
-
+//    Util functions for implement Parcelable
     @Override
     public int describeContents() {
         return 0;

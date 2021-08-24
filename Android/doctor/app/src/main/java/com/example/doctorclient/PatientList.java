@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+//The controller for the pateint list activity.
 public class PatientList extends AppCompatActivity {
     private String doctorID;
     private String patientsStr;
@@ -49,25 +50,30 @@ public class PatientList extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_patient_list);
+//        Connect the variables to the views
         patientListRV = findViewById(R.id.patientListRV);
         layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         patientListRV.setLayoutManager(layoutManager);
+//        Get the doctor information from the intent.
         Intent intent = getIntent();
         Bundle bundle = intent.getExtras();
         doctorID = bundle.getString("doctorID");
         isSenior = bundle.getBoolean("isSenior");
         senior = bundle.getString("senior");
         newMsgMap = new HashMap<>();
+//        Set the adapter for the patient list recycler view.
         patientListAdapter = new PatientListAdapter(this, patientArrayList, doctorID, newMsgMap, isSenior, senior);
         patientListRV.setAdapter(patientListAdapter);
-
 
         appConfig = new AppConfig();
         patientArrayList = new ArrayList<>();
 
+//        Bind the activity to the background service
         Intent intent1 = new Intent(this, SocketBackgroundService.class);
         bindService(intent1, serviceConnection, Context.BIND_AUTO_CREATE);
 
+//        Broadcast listener for updating the category
+//        Modify the dataset and ask the adapter to update.
         updateColorReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -83,6 +89,7 @@ public class PatientList extends AppCompatActivity {
 
             }
         };
+//        Broadcast receiver that handles error.
         errorReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -92,14 +99,13 @@ public class PatientList extends AppCompatActivity {
             }
         };
         LocalBroadcastManager.getInstance(this).registerReceiver(updateColorReceiver, new IntentFilter("updatePatient"));
-
+//      Broadcast receiver that handles receiving new message.
         chatUpdateReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 Message message = intent.getParcelableExtra("msg");
                 String patientID = message.patientID;
                 Log.d("chatUpdate", patientID);
-
                 if (newMsgMap.containsKey(message.patientID)) {
                     newMsgMap.put(message.patientID, true);
                     for (int i = 0; i < patientArrayList.size(); i++) {
@@ -112,6 +118,8 @@ public class PatientList extends AppCompatActivity {
         };
         LocalBroadcastManager.getInstance(this).registerReceiver(chatUpdateReceiver, new IntentFilter("chatUpdate"));
 
+//        Broadcast Receiver that handles message get read
+//        Calling this receiver will make the "new message" text disappear on specific patient.
         readMsgReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -131,14 +139,19 @@ public class PatientList extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+//        Re-request the patient list when the activity resume
         getPatientList(appConfig);
+//        Bind the service if it is not bounded
         LocalBroadcastManager.getInstance(this).registerReceiver(errorReceiver, new IntentFilter("error"));
         if (!bounded) {
             bindService(new Intent(this, SocketBackgroundService.class), serviceConnection, Context.BIND_AUTO_CREATE);
         }
+//        Ask the adapter to update.
         patientListAdapter.updateAdapter(patientArrayList);
     }
 
+//    OnClick listener for the "Add" button.
+//    Redirect to the "add_patient" activity.
     public void addPatientOnClick(View v) {
         Log.d("docID", doctorID);
         Intent intent = new Intent(PatientList.this, AddPatient.class);
@@ -150,18 +163,19 @@ public class PatientList extends AppCompatActivity {
         startActivity(intent);
     }
 
+//    Util function for requesting the patient list
     private void getPatientList(AppConfig appConfig) {
         Map<String, String> doctorIDMap = new HashMap<>();
         doctorIDMap.put("doctorID", doctorID);
         JSONObject doctorIDJson = new JSONObject(doctorIDMap);
-
         String url = appConfig.getServerUrl() + "reqPatientList";
+//        Make a json request
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST,
                 url,
                 doctorIDJson,
+//                Set the listener for putting received patient list to the dataset
                 response -> {
                     patientArrayList = new ArrayList<>();
-
                     try {
                         JSONArray patientIdJsonArray = response.getJSONArray("patientIDList");
                         Log.d("json", response.toString());
@@ -179,12 +193,10 @@ public class PatientList extends AppCompatActivity {
                             if (!newMsgMap.containsKey(i)) {
                                 newMsgMap.put(i, false);
                             }
-
                         }
-
                         Log.d("arraylist", patientArrayList.toString());
                         Log.d("arraylist", newMsgMap.toString());
-
+//                        Ask the adapter to update the recyler view
                         patients = new JSONObject(response.toString());
                         patientListAdapter.updateAdapter(patientArrayList);
 
@@ -193,6 +205,7 @@ public class PatientList extends AppCompatActivity {
                         dialogFrag1option.show(getSupportFragmentManager(), "jsonParseErrorAdapterDialog");
                     }
                 },
+//                Set th error listener.
                 error -> {
                     if (error.networkResponse == null) {
                         runOnUiThread(() -> {
@@ -214,6 +227,7 @@ public class PatientList extends AppCompatActivity {
         RequestQueueSingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
     }
 
+//    Set the service connection used to connect the background service
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -223,7 +237,6 @@ public class PatientList extends AppCompatActivity {
             socketBackgroundService.connectSocket();
             bounded = true;
         }
-
         @Override
         public void onServiceDisconnected(ComponentName name) {
             bounded = false;
@@ -231,12 +244,14 @@ public class PatientList extends AppCompatActivity {
         }
     };
 
+//    Unregister the error broadcast receiver when the activity is paused
     @Override
     protected void onPause() {
         super.onPause();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(errorReceiver);
     }
 
+//    Unbind the background service when the activity is destroyed.
     @Override
     protected void onDestroy() {
         super.onDestroy();

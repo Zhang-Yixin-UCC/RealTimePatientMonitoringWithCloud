@@ -23,6 +23,9 @@ import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Map;
 
+//Adapter for the patient list recycler view.
+//Takes in an array list of Patient object and new message mapping.
+//The new message mapping maps if there is new message to patient ID.
 public class PatientListAdapter extends RecyclerView.Adapter<PatientListAdapter.ViewHolder> {
 //    private JSONObject dataset;
     private Map<String, Boolean> newMsgMap;
@@ -32,6 +35,7 @@ public class PatientListAdapter extends RecyclerView.Adapter<PatientListAdapter.
     private boolean isSenior;
     private String senior;
 
+//    Create the view holders
     public static class ViewHolder extends RecyclerView.ViewHolder{
         private final TextView recyclerviewRowNameTV;
         private final LinearLayout recyclerviewRowBG;
@@ -43,6 +47,7 @@ public class PatientListAdapter extends RecyclerView.Adapter<PatientListAdapter.
             newMsgTV = itemView.findViewById(R.id.newMsgTV);
 
         }
+//        Util functions for getting text views and linear layout.
         public TextView getTextView(){
             return recyclerviewRowNameTV;
         }
@@ -50,6 +55,7 @@ public class PatientListAdapter extends RecyclerView.Adapter<PatientListAdapter.
         public TextView getNewMsgTV() {return newMsgTV;}
     }
 
+//    Constructor
     public PatientListAdapter(Context context, ArrayList<Patient> params, String docID, Map<String,Boolean> newMsgMap, boolean isSenior, String senior){
         this.context = context;
         this.data = params;
@@ -60,6 +66,7 @@ public class PatientListAdapter extends RecyclerView.Adapter<PatientListAdapter.
 //        Log.d("dataset is null", String.valueOf(dataset == null));
     }
 
+//    Inflate the layout
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -67,6 +74,9 @@ public class PatientListAdapter extends RecyclerView.Adapter<PatientListAdapter.
         return new ViewHolder(view) ;
     }
 
+//    Put the data into the view holders
+//    Set the OnClick listeners to the layout.
+//    Clicking the layout will redirect to the patient information activity.
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         if (data != null) {
@@ -94,9 +104,7 @@ public class PatientListAdapter extends RecyclerView.Adapter<PatientListAdapter.
                             break;
                     }
                 }
-
 //                Log.d("patientAdapter", String.valueOf(patient == null));
-
                 if (newMsgMap.containsKey(patient.id)) {
                     if (newMsgMap.get(patient.id)) {
                         holder.getNewMsgTV().setText("New Message");
@@ -129,10 +137,9 @@ public class PatientListAdapter extends RecyclerView.Adapter<PatientListAdapter.
 
             }
         }
-
-
     }
 
+//    Util function for getting the count of patients.
     @Override
     public int getItemCount() {
         if (data != null) {
@@ -142,16 +149,20 @@ public class PatientListAdapter extends RecyclerView.Adapter<PatientListAdapter.
 
 
     }
+
+//    Util function for updating the whole patient list recycler view.
     public  void updateAdapter(ArrayList<Patient> newData){
         data = newData;
-
         notifyDataSetChanged();
     }
+
+//    Util function for updating a specific patient.
     public void updateAdapterPosition(ArrayList<Patient> newData, int position){
         data = newData;
         notifyItemChanged(position);
     }
 
+//    Util function for updating the "New message" text.
     public void readMsgUpdateAdaptorOnPosition(ArrayList<Patient> newData, Map<String, Boolean> newNewMsgMap, int position){
         data = newData;
         newMsgMap = newNewMsgMap;
