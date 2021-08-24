@@ -14,6 +14,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
+//The adapter for the chat recycler view.
+//Takes in an array list of Message object.
 public class ChatRecyclerViewAdapter
     extends RecyclerView.Adapter<ChatRecyclerViewAdapter.ViewHolder> {
   private ArrayList<Message> data;
@@ -24,6 +26,7 @@ public class ChatRecyclerViewAdapter
     this.data = data;
   }
 
+//  Inflate the layout
   @NotNull
   @Override
   public ViewHolder onCreateViewHolder(@NonNull @NotNull ViewGroup parent, int viewType) {
@@ -31,6 +34,7 @@ public class ChatRecyclerViewAdapter
     return new ViewHolder(view);
   }
 
+//Put the data into the view holder.
   @Override
   public void onBindViewHolder(
       @NonNull @NotNull ChatRecyclerViewAdapter.ViewHolder holder, int position) {
@@ -60,6 +64,7 @@ public class ChatRecyclerViewAdapter
     }
   }
 
+//  get the count of messages
   @Override
   public int getItemCount() {
     if (data != null) {
@@ -68,6 +73,7 @@ public class ChatRecyclerViewAdapter
     return 0;
   }
 
+//  Create View holder
   public static class ViewHolder extends RecyclerView.ViewHolder {
     private final TextView leftMsgTV, rightMsgTV, leftTimeTV, rightTimeTV;
 
@@ -78,7 +84,7 @@ public class ChatRecyclerViewAdapter
       leftTimeTV = itemView.findViewById(R.id.leftTimeTV);
       rightTimeTV = itemView.findViewById(R.id.rightTimeTV);
     }
-
+  //  Util function that return the textViews
     public TextView getLeftMsgTV() {
       return leftMsgTV;
     }
@@ -96,11 +102,13 @@ public class ChatRecyclerViewAdapter
     }
   }
 
+//  Util function for updating the whole chat recycler view
   public void updateAdapter(ArrayList<Message> data) {
     this.data = data;
     notifyDataSetChanged();
   }
 
+//Util function for inserting the message at the bottom
   public void insertAtBottom(ArrayList<Message> data) {
     this.data = data;
     notifyItemInserted(data.size() - 1);

@@ -7,6 +7,8 @@ import android.os.Bundle;
 
 import androidx.fragment.app.DialogFragment;
 
+//Customizable Dialog box fragment
+//Use newInstance to create a new dialog box
 public class DialogFrag1option extends DialogFragment {
 
   public DialogFrag1option() {}

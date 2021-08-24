@@ -6,6 +6,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
+//The class for the chat message.
 public class Message {
   public String msg;
   public String time;
@@ -25,6 +26,7 @@ public class Message {
     this.seniorID = seniorID;
   }
 
+//  Convert the message object to the JSON object
   public JSONObject toJSONObject() {
     Map<String, String> param = new HashMap<>();
     param.put("msg", this.msg);
@@ -37,6 +39,7 @@ public class Message {
     return ret;
   }
 
+//  Convert the message object to string
   @Override
   public @NotNull String toString() {
     return "{\"msg\":"

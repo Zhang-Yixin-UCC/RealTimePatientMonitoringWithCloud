@@ -23,26 +23,29 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
+//The login activity
 public class Login extends AppCompatActivity {
   private TextView patientIDTV;
   private RequestQueue requestQueue;
   private AppConfig appConfig;
   private TextView phoneNumberTV;
 
+//  Create the application configuration adn variables
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_login);
     patientIDTV = findViewById(R.id.patientIDTV);
     phoneNumberTV = findViewById(R.id.phoneNumberTV);
-
     requestQueue = Volley.newRequestQueue(this);
     appConfig = new AppConfig();
   }
 
+//  OnClick handler for the login button
   public void loginEventHandler(View v) {
     String patientID = patientIDTV.getText().toString();
     String phoneNumber= phoneNumberTV.getText().toString();
+//    Check if the ID and phone number is empty
     if (patientID.equals("")||phoneNumber.equals("")) {
       Toast.makeText(this, "Must input patient ID and Phone number.", Toast.LENGTH_SHORT).show();
     } else {
@@ -51,16 +54,20 @@ public class Login extends AppCompatActivity {
       param.put("phone", phoneNumber);
       JSONObject jsonParam = new JSONObject(param);
       String url = appConfig.getServerUrl() + "patientLogin";
+//      Put the data in a JSON object
+//      Make a Json object request
       JsonObjectRequest jsonObjectRequest =
           new JsonObjectRequest(
               Request.Method.POST,
               url,
               jsonParam,
+//                  Set the response listener.
+//                  Get the patient information from the response.
+//                  Start the patient monitor activity and pass the patient information to the new activity.
                   response -> {
                     try {
                       Log.d("patientid", response.getString("id"));
                       Log.d("patientName", response.getString("name"));
-
                       String patientID1 = response.getString("id");
                       String patientName = response.getString("name");
                       String patientTag = response.getString("tag");
@@ -86,40 +93,40 @@ public class Login extends AppCompatActivity {
                           getSupportFragmentManager(), "UnknownErrorResponseParseDialog");
                     }
                   },
-              new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                  if (error.networkResponse == null) {
-                    runOnUiThread(
-                        new Runnable() {
-                          @Override
-                          public void run() {
-                            DialogFrag1option dialogFrag1option =
-                                DialogFrag1option.newInstance(
-                                    "Error", "Service unreachable.", "OK");
-                            dialogFrag1option.show(
-                                getSupportFragmentManager(), "ServiceUnreachableDialog");
-                          }
-                        });
-                  } else if (error.networkResponse.statusCode == 404) {
-                    DialogFrag1option dialogFrag1option =
-                        DialogFrag1option.newInstance("Error", "Patient ID not found.", "OK");
-                    dialogFrag1option.show(getSupportFragmentManager(), "patientidNotFoundDialog");
+//                  Set the error listener.
+//                  Make a new dialog fragment and show it.
+                  error -> {
+                    if (error.networkResponse == null) {
+                      runOnUiThread(
+                          new Runnable() {
+                            @Override
+                            public void run() {
+                              DialogFrag1option dialogFrag1option =
+                                  DialogFrag1option.newInstance(
+                                      "Error", "Service unreachable.", "OK");
+                              dialogFrag1option.show(
+                                  getSupportFragmentManager(), "ServiceUnreachableDialog");
+                            }
+                          });
+                    } else if (error.networkResponse.statusCode == 404) {
+                      DialogFrag1option dialogFrag1option =
+                          DialogFrag1option.newInstance("Error", "Patient ID not found.", "OK");
+                      dialogFrag1option.show(getSupportFragmentManager(), "patientidNotFoundDialog");
 
-                  } else if (error.networkResponse.statusCode == 500) {
-                    DialogFrag1option dialogFrag1option =
-                        DialogFrag1option.newInstance(
-                            "Error", "Database error.\nContact IT staff.", "OK");
-                    dialogFrag1option.show(getSupportFragmentManager(), "databaseErrorDialog");
-                  } else {
-                    DialogFrag1option dialogFrag1option =
-                        DialogFrag1option.newInstance(
-                            "Error", "Unknown Error.<DB query failed>\nContact IT staff.", "OK");
-                    dialogFrag1option.show(getSupportFragmentManager(), "unknownErrorDialog");
-                  }
-                }
-              });
+                    } else if (error.networkResponse.statusCode == 500) {
+                      DialogFrag1option dialogFrag1option =
+                          DialogFrag1option.newInstance(
+                              "Error", "Database error.\nContact IT staff.", "OK");
+                      dialogFrag1option.show(getSupportFragmentManager(), "databaseErrorDialog");
+                    } else {
+                      DialogFrag1option dialogFrag1option =
+                          DialogFrag1option.newInstance(
+                              "Error", "Unknown Error.<DB query failed>\nContact IT staff.", "OK");
+                      dialogFrag1option.show(getSupportFragmentManager(), "unknownErrorDialog");
+                    }
+                  });
       jsonObjectRequest.setShouldCache(false);
+//      Send the request
       requestQueue.add(jsonObjectRequest);
     }
   }
