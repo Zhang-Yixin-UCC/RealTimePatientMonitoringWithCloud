@@ -9,6 +9,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
+
+
+//Customizable Dialog box fragment
+//Use newInstance to create a new dialog box
+
 public class DialogFrag1Option extends DialogFragment {
     private DialogFrag1Option(){}
 

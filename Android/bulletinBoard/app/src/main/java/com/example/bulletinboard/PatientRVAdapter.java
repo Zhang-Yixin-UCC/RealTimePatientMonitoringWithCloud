@@ -14,11 +14,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.Map;
 
+//The adapter for the patient list.
+//takes in patient ID array list and a patient dataset: {patientID:[patientName, patientCategory]}
 public class PatientRVAdapter extends RecyclerView.Adapter<PatientRVAdapter.ViewHolder> {
   private Map<String, String[]> dataset;
   private ArrayList<String> patientIDArrayList;
   private Context context;
 
+//  Inflate the layout
   @NonNull
   @Override
   public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -27,6 +30,7 @@ public class PatientRVAdapter extends RecyclerView.Adapter<PatientRVAdapter.View
     return new ViewHolder(view);
   }
 
+//  Put the data into the layout
   @Override
   public void onBindViewHolder(@NonNull PatientRVAdapter.ViewHolder holder, int position) {
     String patientID = patientIDArrayList.get(position);
@@ -56,10 +60,13 @@ public class PatientRVAdapter extends RecyclerView.Adapter<PatientRVAdapter.View
     }
   }
 
+//  Get the count of patients
   @Override
   public int getItemCount() {
     return patientIDArrayList.size();
   }
+
+//  Create View holder
 
   public static class ViewHolder extends RecyclerView.ViewHolder {
     private final TextView patientNameTV;
@@ -70,7 +77,7 @@ public class PatientRVAdapter extends RecyclerView.Adapter<PatientRVAdapter.View
       patientNameTV = itemView.findViewById(R.id.patientNameTV);
       patientLL = itemView.findViewById(R.id.patientLL);
     }
-
+    //  Util function that return the textView and the linear layout
     public TextView getPatientNameTV() {
       return patientNameTV;
     }
@@ -80,6 +87,7 @@ public class PatientRVAdapter extends RecyclerView.Adapter<PatientRVAdapter.View
     }
   }
 
+//  Constructor
   public PatientRVAdapter(
       Context context, Map<String, String[]> dataset, ArrayList<String> patientIDArrayList) {
     this.context = context;
@@ -87,6 +95,7 @@ public class PatientRVAdapter extends RecyclerView.Adapter<PatientRVAdapter.View
     this.patientIDArrayList = patientIDArrayList;
   }
 
+//  Util function for update all patients
   public void updateAdapter(
       Map<String, String[]> newDataSet, ArrayList<String> newPatientIDArrayList) {
     dataset = newDataSet;
@@ -94,6 +103,7 @@ public class PatientRVAdapter extends RecyclerView.Adapter<PatientRVAdapter.View
     notifyDataSetChanged();
   }
 
+//  Util function for updating only one patient
   public void updateAdapterOnPosition(
       Map<String, String[]> newDataSet, ArrayList<String> newPatientIDArrayList, int position) {
     dataset = newDataSet;

@@ -476,6 +476,8 @@ def getPatientStatisticPic():
 # Require a type argument in the connect request
 # Store the sid and ID to corresponding mapping
 # Emit the online event to corresponding client.
+# If the bulletin board connects to the server,
+# emit the updatePatient event with the data of all patients.
 @socketio.on("connect")
 def connect():
     print(f"connect {request.sid}")
