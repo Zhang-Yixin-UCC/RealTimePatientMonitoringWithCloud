@@ -45,8 +45,8 @@ print(df1)
 fig, ax = plt.subplots()
 ax1 = ax.twinx()
 
-df.plot(ax = ax, x = "time(s)", y="database size(byte)", figsize = (10,5), legend = False, title="Time verses Database size and Entry count")
-df1.plot(ax = ax1, x= "time(s)", y="entry count", legend=False, style=["--"])
+df.plot(ax = ax, x = "time(s)", y="database size(byte)", figsize = (10,5), legend = False, title="Time verses Database size and Entry count", ylabel="Database size(byte)")
+df1.plot(ax = ax1, x= "time(s)", y="entry count", legend=False, style=["--"], ylabel="Entry count")
 
 line1, label1 = ax.get_legend_handles_labels()
 line2, label2 = ax1.get_legend_handles_labels()

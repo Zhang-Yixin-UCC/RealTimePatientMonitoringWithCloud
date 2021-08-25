@@ -26,7 +26,7 @@ print(model.coef_)
 
 count = []
 time = []
-with open("statisticTime - 副本.csv","r+") as f:
+with open("statisticTime.csv","r+") as f:
     data = f.readlines()
 
 for line in data:
@@ -48,11 +48,11 @@ df = pd.DataFrame.from_dict(p)
 
 print(df)
 fig, ax = plt.subplots()
-df.plot(ax =ax, x="entry count", figsize = (10,5),title = "Entry count versus Execution time With Regression", style = ["-","--"])
+df.plot(ax =ax, x="entry count", figsize = (10,5),title = "Entry count versus Execution time With Regression", style = ["-","--"], ylabel="Execution time(s)")
 
 plt.show()
 
-ax.figure.savefig("3.png")
+ax.figure.savefig("c.png")
 
 
 

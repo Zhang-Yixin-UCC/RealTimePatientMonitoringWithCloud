@@ -17,7 +17,7 @@ p["time(s)"] = time
 df = pd.DataFrame.from_dict(p)
 
 fig, ax = plt.subplots()
-df.plot(ax =ax, x="entry count", y="time(s)",figsize = (10,5),title = "Entry count versus Execution time")
+df.plot(ax =ax, x="entry count", y="time(s)",figsize = (10,5),title = "Entry count versus Execution time", ylabel="Execution time(s)")
 plt.show()
 
 ax.figure.savefig("b.png")
