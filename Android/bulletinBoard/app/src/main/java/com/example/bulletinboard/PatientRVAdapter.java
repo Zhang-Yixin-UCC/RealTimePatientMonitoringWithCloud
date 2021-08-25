@@ -67,7 +67,6 @@ public class PatientRVAdapter extends RecyclerView.Adapter<PatientRVAdapter.View
   }
 
 //  Create View holder
-
   public static class ViewHolder extends RecyclerView.ViewHolder {
     private final TextView patientNameTV;
     private final LinearLayout patientLL;
