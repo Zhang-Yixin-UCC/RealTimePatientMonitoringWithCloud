@@ -15,6 +15,8 @@ In the Python directory, there are codes for two python programs:
 - Path for the server: `\Python\server`
 - Path for the experiment data and programs used for plotting graph (uncommented): `\Python\experiment`
 
+The python programs contains the virtual environment used to run the programs. The virtual environment locates in the `\venv` directory in the program's directory. 
+
 ##Important files
 - SQLite database file: `\Python\server\HIS.db`. No username and password needed.
 - Experiment original data:
